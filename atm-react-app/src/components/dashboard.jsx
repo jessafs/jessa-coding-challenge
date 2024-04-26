@@ -1,15 +1,16 @@
-import React, { useState } from "react";
-import { Card, Button, Container } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Card, Button, Container, TextField } from "@mui/material";
 import TransactionModal from './transactionModal';
-
+import axios from 'axios'
 const Dashboard = () => {
     const [modalShow, setModalShow] = useState(false);
     const [showBalance, setShowBalance] = useState(false);
     const [transactionType, setTransactionType] = useState("");
-    const [accountBalance, setAccountBalance] = useState(1000)
+    const [accountBalance, setAccountBalance] = useState(0)
     const initialState = {
-        accountNumber: "",
-        amount: ""
+        accountNumber: "1",
+        amount: "",
+        name: ''
     }
     const [data, setData] = useState(initialState);
     const handleTransactionInput = (e) => {
@@ -18,13 +19,15 @@ const Dashboard = () => {
     };
     const handleOpen = (type) => {
         setModalShow(true);
-        // setBtnChange(true)
         setTransactionType(type);
     }
     const handleClose = () => {
         setModalShow(false);
     }
-    const handleWithdrawal = () => {
+    useEffect(() => {
+
+    })
+    const handleWithdrawal = async () => {
         const withdrawalAmount = parseInt(data.amount);
         const accountNumber = data.accountNumber;
         try {
@@ -40,22 +43,19 @@ const Dashboard = () => {
                 alert("You can only withdraw up to $200 in a single transaction.");
                 return;
             }
-            // You can keep track of the total withdrawals made in a day using a variable or by calling an API
-            const totalWithdrawalsPerDay = 0; // Replace this with the actual total withdrawals made in a day
+            const totalWithdrawalsPerDay = 0;
             if (withdrawalAmount + totalWithdrawalsPerDay > 400) {
                 alert("You can only withdraw up to $400 in a single day.");
                 return;
             }
-            // Check if the withdrawal amount can be dispensed in $5 bills
             if (withdrawalAmount % 5 !== 0) {
                 alert("You can only withdraw amounts that can be dispensed in $5 bills.");
                 return;
             }
 
-            // Check if the customer has sufficient funds in their account or credit limit
-            const accountBalance = 1000; // Replace this with the actual account balance
-            const creditLimit = 0; // Replace this with the actual credit limit
-            const isCreditAccount = false; // Replace this with the actual logic to determine if it's a credit account
+            const accountBalance = 1000;
+            const creditLimit = 0;
+            const isCreditAccount = false;
 
             if (isCreditAccount) {
                 if (withdrawalAmount > creditLimit) {
@@ -69,13 +69,13 @@ const Dashboard = () => {
                 }
             }
 
-            // Perform the withdrawal operation
-            // You can call an API or update the account balance/credit limit here
+            const { data: { msg } } = await axios.post('http://localhost:3001/withdraw', {
+                accountNumber,
+                amount: withdrawalAmount
+            })
+            alert(msg);
             setAccountBalance(prevBalance => prevBalance - withdrawalAmount);
-            // Reset the form data
             setData(initialState);
-
-            // Close the modal
             handleClose();
         } catch (error) {
             alert(error.message);
@@ -84,7 +84,7 @@ const Dashboard = () => {
 
     };
 
-    const handleDeposit = () => {
+    const handleDeposit = async () => {
         try {
             const accountNumber = data.accountNumber;
             const depositAmount = parseInt(data.amount);
@@ -92,40 +92,46 @@ const Dashboard = () => {
                 alert("Please enter both the valid amount and account number.");
                 return;
             }
+            const res = await axios.post(`http://localhost:3001/deposit`, {
+                accountNumber,
+                depositAmount
+            })
 
-            // Check if the deposit amount exceeds the maximum limit per transaction
-            if (depositAmount > 1000) {
-                throw new Error("You can only deposit up to $1000 in a single transaction.");
-            }
-            setAccountBalance(prevBalance => prevBalance + depositAmount);
-            // Perform the deposit operation
-            // You can call an API or update the account balance here
-            // setAccountBalance(depositAmount += accountBalance)
-
-            // Reset the form data
-            setData(initialState);
-
-            // Close the modal
+            setAccountBalance(res.data.newbal)
             handleClose();
         } catch (error) {
             alert(error.message);
         }
     };
-    const handleCheckBalance = () => {
-        // Retrieve the account balance
-        const accountBalance = 0; // Replace this with the actual account balance
+    const handleCheckBalance = async () => {
         setShowBalance(true)
-        // Display the account balance to the user
-
+        if (data.accountNumber) {
+            alert("Kindly input account number")
+        }
+        const res = await axios.get(`http://localhost:3001/inquire/${data.accountNumber}`)
+        const { data: { account: { amount, name } } } = res
+        setAccountBalance(amount)
+        setData({ ...data, name })
     };
 
 
     return (
         <>
             <Card className="card" style={{ backgroundColor: "antiquewhite" }}>
+                <TextField
+                    onInput={handleTransactionInput}
+                    name="accountNumber"
+                    required
+                    label="Enter Account Number"
+                    id="outlined-required"
+                    sx={{ width: '100%' }}
+
+                />
+                <br /><br />
                 {showBalance ?
-                    (<h4>Your Account Balance: {accountBalance}</h4>) : (null)
+                    (<h4>{data.name} your balance is {accountBalance}</h4>) : (null)
                 }
+
                 <Container className="card-container">
                     <Button onClick={() => handleOpen("withdraw")} className="transactionBtn" size="large" variant="outlined">
                         Withdraw

@@ -1,9 +1,9 @@
 const express = require("express");
 const db = require("./database/db-connect");
 const routes = require("./routes/transactionRoutes");
-
+const cors = require("cors");
 const app = express();
-
+app.use(cors());
 db.connect((err) => {
   if (err) {
     console.error("Error connecting to PostgreSQL database:", err);

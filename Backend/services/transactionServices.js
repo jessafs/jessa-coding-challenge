@@ -1,26 +1,11 @@
 const pool = require("../database/db-connect");
 
 exports.withdraw = async (accountNumber, amount) => {
-  console.log(
-    "%c 🔺: exports.withdraw -> accountNumber ",
-    "font-size:16px;background-color:#066c1e;color:white;",
-    accountNumber
-  );
   try {
     const client = await pool.connect();
-    const query = `SELECT * FROM accounts WHERE account_number = $1`;
-    const result = await client.query(query, [accountNumber]);
-    console.log(
-      "%c 3️⃣: exports.withdraw -> query ",
-      "font-size:16px;background-color:#dd74bd;color:white;",
-      query
-    );
+    const query = `SELECT * FROM accounts where account_number=${accountNumber}`;
+    const result = await client.query(query);
 
-    console.log(
-      "%c 🗝️: exports.withdraw -> result.rows.length ",
-      "font-size:16px;background-color:#fa5445;color:white;",
-      result.rows.length
-    );
     if (result.rows.length === 0) {
       client.release();
       throw new Error("Account not found");
@@ -51,11 +36,63 @@ exports.withdraw = async (accountNumber, amount) => {
     }
 
     const updatedAmount = currentAmount - amount;
-    const updateQuery = `UPDATE accounts SET amount = $1 WHERE account_number = $2`;
-    await client.query(updateQuery, [updatedAmount, accountNumber]);
+    const updateQuery = `UPDATE accounts SET amount =${updatedAmount} WHERE account_number = ${accountNumber}`;
+    await client.query(updateQuery);
 
     client.release();
-    return `Withdrawal of $${amount} successful from account ${name}`;
+    return {
+      msg: "Transaction complete, thanks for banking",
+      withdrawal: amount,
+      balance: currentAmount,
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    throw new Error("An error occurred");
+  }
+};
+
+exports.inquire = async (accountNumber) => {
+  try {
+    const client = await pool.connect();
+    const query = `SELECT * FROM accounts where account_number=${accountNumber}`;
+    const result = await client.query(query);
+
+    if (result.rows.length === 0) {
+      client.release();
+      throw new Error("Account not found");
+    }
+    const account = result.rows[0];
+
+    client.release();
+    return {
+      msg: "ok",
+      account,
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    throw new Error("An error occurred");
+  }
+};
+
+exports.deposit = async (accountNumber, amount) => {
+  try {
+    const client = await pool.connect();
+    const query1 = `SELECT * FROM accounts where account_number=${accountNumber}`;
+    const result = await client.query(query1);
+
+    if (result.rows.length === 0) {
+      client.release();
+      throw new Error("Account not found");
+    }
+    const account = result.rows[0];
+    const newbal = account.amount + amount;
+    const query = `Update accounts SET amount=${newbal} where account_number=${accountNumber}`;
+    await client.query(query);
+    client.release();
+    return {
+      msg: "ok",
+      newbal,
+    };
   } catch (error) {
     console.error("Error:", error);
     throw new Error("An error occurred");

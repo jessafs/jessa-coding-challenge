@@ -13,15 +13,7 @@ const TransactionModal = (props) => {
       <Card className="modal-card">
         <CardContent>
           <h2 style={{ color: "red" }}>Kindly fill in the fields</h2>
-          <TextField
-            onInput={handleTransactionInput}
-            name="accountNumber"
-            required
-            label="Enter Account Number"
-            id="outlined-required"
-            sx={{ width: '100%' }}
 
-          /><br /><br />
           <TextField
             onInput={handleTransactionInput}
             required

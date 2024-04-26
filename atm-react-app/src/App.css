@@ -53,9 +53,10 @@
 }
 
 .card-container {
-  display: flex;
-  flex-direction: column;
+  display: grid !important;
+  grid-template-columns: auto auto auto !important;
   align-items: center;
+  gap: 20px !important;
 }
 
 .transactionBtn {
